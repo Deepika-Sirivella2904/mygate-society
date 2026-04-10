@@ -41,7 +41,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="admin@greenvalley.com" required />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-field" placeholder="deepika@greenvalley.com" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -64,7 +64,7 @@ export default function Login() {
           <div className="mt-6 pt-6 border-t border-gray-100">
             <p className="text-xs text-gray-400 text-center mb-2">Demo Credentials</p>
             <div className="space-y-1 text-xs text-gray-500">
-              <p><strong>Admin:</strong> admin@greenvalley.com / password123</p>
+              <p><strong>Admin:</strong> deepika@greenvalley.com / password123</p>
               <p><strong>Resident:</strong> rahul@greenvalley.com / password123</p>
               <p><strong>Security:</strong> security@greenvalley.com / password123</p>
             </div>

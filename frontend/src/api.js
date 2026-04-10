@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Use demo mode for GitHub Pages
+const isDemoMode = window.location.hostname === 'deepika-sirivella2904.github.io';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: isDemoMode ? 'https://your-backend-url.onrender.com' : '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

@@ -32,7 +32,7 @@ async function initDB() {
     // Admin
     await client.query(`
       INSERT INTO users (id, society_id, name, email, password, phone, role, flat_number, block)
-      VALUES ($1, $2, 'Deepika Admin', 'admin@greenvalley.com', $3, '9876543210', 'admin', 'A-101', 'A')
+      VALUES ($1, $2, 'Deepika Admin', 'deepika@greenvalley.com', $3, '9876543210', 'admin', 'A-101', 'A')
       ON CONFLICT (email) DO NOTHING
     `, [adminId, societyId, hashedPassword]);
 
@@ -61,8 +61,8 @@ async function initDB() {
     for (const [name, desc, loc, cap, req, open, close, charge] of amenities) {
       await client.query(`
         INSERT INTO amenities (society_id, name, description, location, capacity, booking_required, open_time, close_time, charge_per_hour)
-        SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9
-        WHERE NOT EXISTS (SELECT 1 FROM amenities WHERE society_id = $1 AND name = $2)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT DO NOTHING
       `, [societyId, name, desc, loc, cap, req, open, close, charge]);
     }
 
@@ -77,8 +77,8 @@ async function initDB() {
     for (const [name, phone, type] of contacts) {
       await client.query(`
         INSERT INTO emergency_contacts (society_id, name, phone, service_type)
-        SELECT $1, $2, $3, $4
-        WHERE NOT EXISTS (SELECT 1 FROM emergency_contacts WHERE society_id = $1 AND name = $2)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT DO NOTHING
       `, [societyId, name, phone, type]);
     }
 
@@ -91,7 +91,7 @@ async function initDB() {
 
     console.log('✅ Demo data seeded successfully');
     console.log('\n📋 Demo Login Credentials:');
-    console.log('  Admin:    admin@greenvalley.com / password123');
+    console.log('  Admin:    deepika@greenvalley.com / password123');
     console.log('  Resident: rahul@greenvalley.com / password123');
     console.log('  Security: security@greenvalley.com / password123');
 
