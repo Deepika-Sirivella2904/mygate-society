@@ -26,7 +26,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Manual database initialization (for production without shell access)
-app.post('/api/admin/init-db', async (req, res) => {
+app.get('/api/admin/init-db', async (req, res) => {
   try {
     console.log('[DB] Manual database initialization triggered...');
     const init = require('./db/init');
