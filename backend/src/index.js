@@ -25,6 +25,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now(), uptime: process.uptime() });
 });
 
+// Manual database initialization (for production without shell access)
+app.post('/api/admin/init-db', async (req, res) => {
+  try {
+    console.log('[DB] Manual database initialization triggered...');
+    const init = require('./db/init');
+    await init.initializeDatabase();
+    res.json({ success: true, message: 'Database initialized successfully' });
+  } catch (error) {
+    console.error('[DB] Manual init failed:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/visitors', require('./routes/visitors'));
