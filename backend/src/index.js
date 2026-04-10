@@ -11,13 +11,13 @@ const server = http.createServer(app);
 // Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://mygate-society.vercel.app'],
     methods: ['GET', 'POST'],
   },
 });
 
 // Middleware
-app.use(cors({ origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'] }));
+app.use(cors({ origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173', 'https://mygate-society.vercel.app'] }));
 app.use(express.json());
 
 // Health check
