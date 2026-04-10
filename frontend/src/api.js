@@ -1,10 +1,8 @@
 import axios from 'axios';
 
-// Use demo mode for GitHub Pages
-const isDemoMode = window.location.hostname === 'deepika-sirivella2904.github.io';
-
+// Use deployed backend URL for production
 const api = axios.create({
-  baseURL: isDemoMode ? 'https://your-backend-url.onrender.com' : '/api',
+  baseURL: 'https://mygate-society-api.onrender.com',
   headers: { 'Content-Type': 'application/json' },
 });
 

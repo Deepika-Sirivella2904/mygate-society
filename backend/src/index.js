@@ -103,11 +103,42 @@ io.on('connection', (socket) => {
   });
 });
 
+// Auto-initialize database on startup
+const initDatabase = async () => {
+  try {
+    console.log('[DB] Checking database initialization...');
+    
+    // Check if tables exist
+    const tablesExist = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'societies'
+      );
+    `);
+    
+    if (!tablesExist.rows[0].exists) {
+      console.log('[DB] Tables not found. Initializing database...');
+      const init = require('./db/init');
+      await init.initializeDatabase();
+      console.log('[DB] Database initialized successfully!');
+    } else {
+      console.log('[DB] Database already initialized.');
+    }
+  } catch (error) {
+    console.error('[DB] Initialization error:', error.message);
+    console.log('[DB] Continuing server startup...');
+  }
+};
+
 // Start server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`\n🏠 MyGate Society Management Server`);
   console.log(`   API:    http://localhost:${PORT}/api`);
   console.log(`   Health: http://localhost:${PORT}/api/health`);
   console.log(`   Env:    ${process.env.NODE_ENV || 'development'}\n`);
+  
+  // Initialize database
+  await initDatabase();
 });

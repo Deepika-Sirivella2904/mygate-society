@@ -6,7 +6,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-async function initDB() {
+async function initializeDatabase() {
   const client = await pool.connect();
   try {
     // Run schema
@@ -100,8 +100,13 @@ async function initDB() {
     throw err;
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
-initDB();
+// Export for use in server startup
+module.exports = { initializeDatabase };
+
+// Run if called directly (for manual initialization)
+if (require.main === module) {
+  initializeDatabase().then(() => process.exit(0)).catch(() => process.exit(1));
+}
