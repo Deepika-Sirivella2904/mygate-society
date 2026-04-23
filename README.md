@@ -2,6 +2,8 @@
 
 A comprehensive society/apartment management application inspired by MyGate. Built with React, Node.js, Express, PostgreSQL, and Socket.IO.
 
+**Live Demo:** [https://mysocietygate.netlify.app](https://mysocietygate.netlify.app)
+
 ## Features
 
 ### Visitor Management
@@ -117,13 +119,15 @@ mygate-society/
 │   ├── package.json
 │   └── .env.example
 ├── frontend/
+│   ├── public/
+│   │   └── _redirects            # Netlify SPA routing
 │   ├── src/
 │   │   ├── main.jsx
 │   │   ├── App.jsx               # Routes
-│   │   ├── api.js                # Axios instance
+│   │   ├── api.js                # Mock API / Axios (DEMO_MODE toggle)
 │   │   ├── index.css             # TailwindCSS
 │   │   ├── context/
-│   │   │   └── AuthContext.jsx   # Auth state management
+│   │   │   └── AuthContext.jsx   # Auth state (demo users)
 │   │   ├── components/
 │   │   │   └── Layout.jsx        # Sidebar + header layout
 │   │   └── pages/
@@ -167,12 +171,38 @@ mygate-society/
 | notifications | In-app notifications |
 | vehicles | Vehicle registry |
 
+## Deployment
+
+### Production (Netlify)
+
+The frontend is deployed on **Netlify** with built-in demo mode:
+
+- **URL:** [https://mysocietygate.netlify.app](https://mysocietygate.netlify.app)
+- **Auto-deploys** from the `master` branch on GitHub
+- **SPA routing** handled via `_redirects` file
+- **No backend required** — demo mode uses in-memory mock data
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | deepika@greenvalley.com | password123 |
+| Resident | rahul@greenvalley.com | password123 |
+| Security | security@greenvalley.com | password123 |
+
+**Society ID for Registration:** `GREEN-001`
+
+### Demo Mode vs Production Mode
+
+The frontend has a `DEMO_MODE` flag in `frontend/src/api.js`:
+
+- **`DEMO_MODE = true`** (default) — All API calls are mocked in-memory. No backend needed.
+- **`DEMO_MODE = false`** — Connects to a real backend at the configured `BACKEND_URL`.
+
 ## Setup Instructions
 
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 14+
+- PostgreSQL 14+ *(only needed if running with real backend)*
 - npm 10+
 
 ### 1. Clone the repository
@@ -182,53 +212,7 @@ git clone https://github.com/Deepika-Sirivella2904/mygate-society.git
 cd mygate-society
 ```
 
-### 2. Set up the database
-
-```bash
-# Create a PostgreSQL database
-createdb mygate_society
-
-# Or via psql:
-psql -U postgres -c "CREATE DATABASE mygate_society;"
-```
-
-### 3. Configure environment
-
-```bash
-cd backend
-cp .env.example .env
-# Edit .env with your PostgreSQL credentials:
-# DATABASE_URL=postgresql://username:password@localhost:5432/mygate_society
-```
-
-### 4. Initialize database and seed data
-
-```bash
-cd backend
-npm install
-npm run db:init
-```
-
-This creates all tables and seeds demo data with these login credentials:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@greenvalley.com | password123 |
-| Resident | rahul@greenvalley.com | password123 |
-| Security | security@greenvalley.com | password123 |
-
-### 5. Start the backend
-
-```bash
-cd backend
-npm run dev    # Development (with nodemon)
-# or
-npm start      # Production
-```
-
-Server runs on http://localhost:5000
-
-### 6. Start the frontend
+### 2. Run the frontend (Demo Mode — no backend needed)
 
 ```bash
 cd frontend
@@ -236,9 +220,39 @@ npm install
 npm run dev
 ```
 
-Frontend runs on http://localhost:5173
+Frontend runs on http://localhost:5173 — everything works out of the box.
 
-### 7. Run tests
+### 3. (Optional) Set up the backend with PostgreSQL
+
+```bash
+# Create database
+createdb mygate_society
+
+# Configure environment
+cd backend
+cp .env.example .env
+# Edit .env with your PostgreSQL credentials
+
+# Install and initialize
+npm install
+npm run db:init
+
+# Start backend
+npm run dev
+```
+
+Then set `DEMO_MODE = false` in `frontend/src/api.js`.
+
+### 4. Build for production
+
+```bash
+cd frontend
+npm run build
+```
+
+Output is in `frontend/dist/` — deploy to any static host (Netlify, Vercel, etc.).
+
+### 5. Run tests
 
 ```bash
 cd backend
