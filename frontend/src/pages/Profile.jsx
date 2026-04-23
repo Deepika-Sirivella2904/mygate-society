@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { User, Save, Lock } from 'lucide-react';
+import { User, Save, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
@@ -9,6 +9,8 @@ export default function Profile() {
   const [pwForm, setPwForm] = useState({ current_password: '', new_password: '' });
   const [msg, setMsg] = useState('');
   const [pwMsg, setPwMsg] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -82,11 +84,42 @@ export default function Profile() {
         <form onSubmit={handlePassword} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-            <input type="password" value={pwForm.current_password} onChange={e => setPwForm(p => ({ ...p, current_password: e.target.value }))} className="input-field" required />
+            <div className="relative">
+              <input 
+                type={showCurrentPassword ? "text" : "password"} 
+                value={pwForm.current_password} 
+                onChange={e => setPwForm(p => ({ ...p, current_password: e.target.value }))} 
+                className="input-field pr-10" 
+                required 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)} 
+                className="absolute right-3 top-2.5 text-gray-400"
+              >
+                {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-            <input type="password" value={pwForm.new_password} onChange={e => setPwForm(p => ({ ...p, new_password: e.target.value }))} className="input-field" required minLength={6} />
+            <div className="relative">
+              <input 
+                type={showNewPassword ? "text" : "password"} 
+                value={pwForm.new_password} 
+                onChange={e => setPwForm(p => ({ ...p, new_password: e.target.value }))} 
+                className="input-field pr-10" 
+                required 
+                minLength={6} 
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowNewPassword(!showNewPassword)} 
+                className="absolute right-3 top-2.5 text-gray-400"
+              >
+                {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
           <button type="submit" className="btn-primary">Update Password</button>
         </form>

@@ -2,7 +2,11 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  user: 'postgres',
+  password: 'B9HRqAwZ',
+  host: 'localhost',
+  port: 5432,
+  database: 'mygate_society',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

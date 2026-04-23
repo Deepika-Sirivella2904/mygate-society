@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { Plus, UserCheck, UserX, Clock } from 'lucide-react';
+import { Plus, Clock, UserCheck, UserX, Users, LogOut } from 'lucide-react';
 
 const staffTypes = ['maid', 'driver', 'cook', 'gardener', 'plumber', 'electrician', 'security', 'other'];
 
@@ -12,12 +12,47 @@ export default function Staff() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('');
   const [form, setForm] = useState({ name: '', phone: '', staff_type: 'maid', is_verified: false });
+  const [markedAttendance, setMarkedAttendance] = useState(new Set());
+  const [assignedStaff, setAssignedStaff] = useState(new Set());
+  const [checkedInStaff, setCheckedInStaff] = useState(new Set());
 
   const load = async () => {
     try {
       const params = filter ? `?type=${filter}` : '';
       const res = await api.get(`/staff${params}`);
       setStaff(res.data.staff || []);
+      
+      // Check today's attendance for each staff member
+      const today = new Date().toDateString();
+      const marked = new Set();
+      const assigned = new Set();
+      
+      // Get assigned staff for current resident
+      if (user?.role === 'resident') {
+        try {
+          const myStaffRes = await api.get('/staff/my-staff');
+          myStaffRes.data.staff?.forEach(s => assigned.add(s.id));
+        } catch (err) {
+          // No assigned staff
+        }
+      }
+      
+      for (const member of res.data.staff || []) {
+        try {
+          const attendanceRes = await api.get(`/staff/${member.id}/attendance`);
+          const todayAttendance = attendanceRes.data.attendance?.find(a => 
+            new Date(a.check_in).toDateString() === today
+          );
+          if (todayAttendance && !todayAttendance.check_out) {
+            marked.add(member.id);
+          }
+        } catch (err) {
+          // No attendance records for today
+        }
+      }
+      
+      setMarkedAttendance(marked);
+      setAssignedStaff(assigned);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -37,14 +72,38 @@ export default function Staff() {
   const handleAssign = async (staffId) => {
     try {
       await api.post(`/staff/${staffId}/assign`, {});
-      alert('Staff assigned to you!');
+      setAssignedStaff(prev => new Set([...prev, staffId]));
+      alert('Staff assigned to you successfully!');
     } catch (err) { alert(err.response?.data?.error || 'Failed'); }
   };
 
   const handleAttendance = async (staffId) => {
     try {
       await api.post(`/staff/${staffId}/attendance`, {});
-      alert('Attendance marked!');
+      setMarkedAttendance(prev => new Set([...prev, staffId]));
+      setCheckedInStaff(prev => new Set([...prev, staffId]));
+      alert('Attendance marked successfully!');
+    } catch (err) { alert(err.response?.data?.error || 'Failed'); }
+  };
+
+  const handleCheckout = async (staffId) => {
+    try {
+      // Get today's attendance record for this staff
+      const today = new Date().toISOString().split('T')[0];
+      const res = await api.get(`/staff/attendance/today/${staffId}`);
+      const attendanceRecord = res.data.attendance?.find(a => 
+        new Date(a.check_in).toISOString().split('T')[0] === today
+      );
+      
+      if (attendanceRecord) {
+        await api.put(`/staff/attendance/${attendanceRecord.id}/checkout`);
+        setCheckedInStaff(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(staffId);
+          return newSet;
+        });
+        alert('Staff checked out successfully!');
+      }
     } catch (err) { alert(err.response?.data?.error || 'Failed'); }
   };
 
@@ -134,12 +193,42 @@ export default function Staff() {
               {s.phone && <p className="text-sm text-gray-500 mt-2">📞 {s.phone}</p>}
               <div className="flex gap-2 mt-3">
                 {user?.role === 'resident' && (
-                  <button onClick={() => handleAssign(s.id)} className="btn-primary text-sm py-1.5 flex-1">Assign to Me</button>
+                  <button 
+                    onClick={() => handleAssign(s.id)} 
+                    disabled={assignedStaff.has(s.id)}
+                    className={`text-sm py-1.5 flex-1 ${
+                      assignedStaff.has(s.id) 
+                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                        : 'btn-primary'
+                    }`}
+                  >
+                    {assignedStaff.has(s.id) ? 'Assigned' : 'Assign to Me'}
+                  </button>
                 )}
                 {['security', 'admin'].includes(user?.role) && (
-                  <button onClick={() => handleAttendance(s.id)} className="btn-success text-sm py-1.5 flex-1 flex items-center justify-center gap-1">
-                    <Clock className="w-4 h-4" /> Mark Entry
-                  </button>
+                  <>
+                    {checkedInStaff.has(s.id) ? (
+                      <button 
+                        onClick={() => handleCheckout(s.id)} 
+                        className="btn-warning text-sm py-1.5 flex-1 flex items-center justify-center gap-1"
+                      >
+                        <LogOut className="w-4 h-4" /> Check Out
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => handleAttendance(s.id)} 
+                        disabled={markedAttendance.has(s.id)}
+                        className={`text-sm py-1.5 flex-1 flex items-center justify-center gap-1 ${
+                          markedAttendance.has(s.id) 
+                            ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                            : 'btn-success'
+                        }`}
+                      >
+                        <Clock className="w-4 h-4" /> 
+                        {markedAttendance.has(s.id) ? 'Marked' : 'Mark Entry'}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

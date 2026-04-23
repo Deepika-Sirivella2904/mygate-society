@@ -65,7 +65,7 @@ router.post('/', authenticate, async (req, res) => {
     const gatePass = generateGatePass();
     const { rows } = await pool.query(
       `INSERT INTO visitors (society_id, resident_id, visitor_name, visitor_phone, visitor_type, vehicle_number, purpose, status, gate_pass_code, is_preapproved, expected_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved', $8, true, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8, true, $9)
        RETURNING *`,
       [req.user.society_id, req.user.id, visitor_name, visitor_phone || null, visitor_type || 'guest', vehicle_number || null, purpose || null, gatePass, expected_date || null]
     );

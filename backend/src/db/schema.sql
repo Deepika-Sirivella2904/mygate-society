@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- SOCIETIES
 -- ============================================================
 CREATE TABLE IF NOT EXISTS societies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
     address TEXT NOT NULL,
     city VARCHAR(100) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS societies (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(200) UNIQUE NOT NULL,
     password VARCHAR(200) NOT NULL,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS visitors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     resident_id UUID REFERENCES users(id) ON DELETE CASCADE,
     visitor_name VARCHAR(100) NOT NULL,
     visitor_phone VARCHAR(15),
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS visitors (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS amenities (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     description TEXT,
     location VARCHAR(200),
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS amenity_bookings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     amenity_id UUID REFERENCES amenities(id) ON DELETE CASCADE,
     resident_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     booking_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS amenity_bookings (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS complaints (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     resident_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     description TEXT NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS complaints (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS notices (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     author_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     content TEXT NOT NULL,
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS notices (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS staff (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(15),
     staff_type VARCHAR(30) NOT NULL CHECK (staff_type IN ('maid', 'driver', 'cook', 'gardener', 'plumber', 'electrician', 'security', 'other')),
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS staff_residents (
 CREATE TABLE IF NOT EXISTS staff_attendance (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     staff_id UUID REFERENCES staff(id) ON DELETE CASCADE,
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     check_in TIMESTAMP NOT NULL DEFAULT NOW(),
     check_out TIMESTAMP,
     marked_by UUID REFERENCES users(id),
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS staff_attendance (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS bills (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     resident_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     description TEXT,
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS bills (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS emergency_contacts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(15) NOT NULL,
     service_type VARCHAR(50) NOT NULL CHECK (service_type IN ('police', 'fire', 'ambulance', 'hospital', 'electrician', 'plumber', 'society_office', 'other')),
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS emergency_contacts (
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     message TEXT NOT NULL,
     type VARCHAR(30) DEFAULT 'info' CHECK (type IN ('info', 'visitor', 'complaint', 'notice', 'bill', 'emergency', 'staff')),
@@ -231,7 +231,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE TABLE IF NOT EXISTS vehicles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     resident_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    society_id UUID REFERENCES societies(id) ON DELETE CASCADE,
+    society_id VARCHAR(50) REFERENCES societies(id) ON DELETE CASCADE,
     vehicle_number VARCHAR(20) NOT NULL,
     vehicle_type VARCHAR(20) NOT NULL CHECK (vehicle_type IN ('car', 'bike', 'scooter', 'bicycle', 'other')),
     make VARCHAR(50),

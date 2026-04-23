@@ -115,4 +115,24 @@ router.put('/password', authenticate, async (req, res) => {
   }
 });
 
+// POST /api/auth/verify-society
+router.post('/verify-society', async (req, res) => {
+  try {
+    const { society_id } = req.body;
+    if (!society_id) {
+      return res.status(400).json({ error: 'Society ID is required' });
+    }
+
+    const { rows } = await pool.query('SELECT id, name FROM societies WHERE id = $1', [society_id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Invalid society ID' });
+    }
+
+    res.json({ society: rows[0] });
+  } catch (err) {
+    console.error('Society verification error:', err);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
 module.exports = router;

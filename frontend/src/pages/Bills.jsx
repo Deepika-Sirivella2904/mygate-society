@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { Plus, CreditCard, IndianRupee } from 'lucide-react';
+import { Plus, CreditCard, IndianRupee, X } from 'lucide-react';
+import QRCode from 'qrcode';
 
 export default function Bills() {
   const { user } = useAuth();
@@ -11,6 +12,8 @@ export default function Bills() {
   const [showForm, setShowForm] = useState(false);
   const [residents, setResidents] = useState([]);
   const [form, setForm] = useState({ resident_id: '', title: '', description: '', amount: '', bill_type: 'maintenance', due_date: '' });
+  const [qrCode, setQrCode] = useState('');
+  const [selectedBill, setSelectedBill] = useState(null);
 
   const load = async () => {
     try {
@@ -39,9 +42,35 @@ export default function Bills() {
 
   const handlePay = async (id) => {
     try {
-      await api.put(`/bills/${id}/pay`, { payment_method: 'online' });
-      load();
+      const bill = bills.find(b => b.id === id);
+      setSelectedBill(bill);
+      
+      // Generate QR code with payment details
+      const paymentDetails = {
+        billId: id,
+        title: bill.title,
+        amount: bill.amount,
+        residentId: user.id,
+        societyId: user.society_id,
+        upiId: 'sdeepika8833@oksbi', // Updated UPI ID
+        timestamp: new Date().toISOString()
+      };
+      
+      const qrData = `upi://pay?pa=${paymentDetails.upiId}&pn=MyGate Society&am=${paymentDetails.amount}&cu=INR&tn=${paymentDetails.title}`;
+      const qrCodeDataUrl = await QRCode.toDataURL(qrData);
+      setQrCode(qrCodeDataUrl);
     } catch (err) { alert(err.response?.data?.error || 'Failed'); }
+  };
+
+  const handlePaymentComplete = async () => {
+    if (selectedBill) {
+      try {
+        await api.put(`/bills/${selectedBill.id}/pay`, { payment_method: 'online' });
+        setQrCode('');
+        setSelectedBill(null);
+        load();
+      } catch (err) { alert(err.response?.data?.error || 'Failed'); }
+    }
   };
 
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
@@ -137,6 +166,57 @@ export default function Bills() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* QR Code Payment Modal */}
+      {qrCode && selectedBill && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-gray-900">Scan QR Code to Pay</h3>
+              <button onClick={() => { setQrCode(''); setSelectedBill(null); }} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="text-center space-y-4">
+              <div className="bg-white p-4 rounded-lg border-2 border-gray-200 inline-block">
+                <img src={qrCode} alt="Payment QR Code" className="w-48 h-48" />
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-semibold text-gray-900">{selectedBill.title}</h4>
+                <p className="text-2xl font-bold text-primary-600">Rs. {parseFloat(selectedBill.amount).toLocaleString()}</p>
+                <p className="text-sm text-gray-500">UPI ID: sdeepika8833@oksbi</p>
+              </div>
+              
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-xs text-blue-700">
+                  <strong>Instructions:</strong><br/>
+                  1. Open any UPI app (PhonePe, GPay, PayTM)<br/>
+                  2. Scan the QR code above<br/>
+                  3. Confirm payment details<br/>
+                  4. Complete payment
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={handlePaymentComplete}
+                  className="btn-success flex-1 flex items-center justify-center gap-2"
+                >
+                  <CreditCard className="w-4 h-4" /> Payment Completed
+                </button>
+                <button 
+                  onClick={() => { setQrCode(''); setSelectedBill(null); }}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

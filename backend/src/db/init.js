@@ -4,7 +4,13 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  user: 'postgres',
+  password: 'B9HRqAwZ',
+  host: 'localhost',
+  port: 5432,
+  database: 'mygate_society'
+});
 
 async function initializeDatabase() {
   const client = await pool.connect();
@@ -15,7 +21,7 @@ async function initializeDatabase() {
     console.log('✅ Database schema created successfully');
 
     // Seed demo data
-    const societyId = '11111111-1111-1111-1111-111111111111';
+    const societyId = '11552299';
     const adminId = '22222222-2222-2222-2222-222222222222';
     const residentId = '33333333-3333-3333-3333-333333333333';
     const securityId = '44444444-4444-4444-4444-444444444444';
@@ -25,8 +31,8 @@ async function initializeDatabase() {
     // Society
     await client.query(`
       INSERT INTO societies (id, name, address, city, state, pincode, total_units)
-      VALUES ($1, 'Green Valley Apartments', '123 MG Road, Hitech City', 'Hyderabad', 'Telangana', '500081', 200)
-      ON CONFLICT (id) DO NOTHING
+        VALUES ($1, 'Green Valley Apartments', '123 MG Road, Hitech City', 'Hyderabad', 'Telangana', '500081', 200)
+        ON CONFLICT (id) DO NOTHING
     `, [societyId]);
 
     // Admin

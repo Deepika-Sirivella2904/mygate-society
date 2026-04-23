@@ -63,7 +63,7 @@ export default function Vehicles() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Make</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
               <input value={form.make} onChange={set('make')} className="input-field" placeholder="Hyundai" />
             </div>
             <div>

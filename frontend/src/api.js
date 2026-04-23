@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Use deployed backend URL for production
+// Use local backend URL for development
 const api = axios.create({
-  baseURL: 'https://mygate-society.onrender.com',
+  baseURL: 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

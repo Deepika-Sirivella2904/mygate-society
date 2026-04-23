@@ -30,7 +30,7 @@ export default function Login() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white">MyGate</h1>
-          <p className="text-primary-200 mt-1">Society Management Platform</p>
+          <p className="text-primary-200 mt-1">Gated Community</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -60,15 +60,6 @@ export default function Login() {
           <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account? <Link to="/register" className="text-primary-600 font-medium hover:underline">Register</Link>
           </p>
-
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-xs text-gray-400 text-center mb-2">Demo Credentials</p>
-            <div className="space-y-1 text-xs text-gray-500">
-              <p><strong>Admin:</strong> deepika@greenvalley.com / password123</p>
-              <p><strong>Resident:</strong> rahul@greenvalley.com / password123</p>
-              <p><strong>Security:</strong> security@greenvalley.com / password123</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

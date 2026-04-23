@@ -6,12 +6,35 @@ import { Shield } from 'lucide-react';
 export default function Register() {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', flat_number: '', block: '', society_id: '11111111-1111-1111-1111-111111111111' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', flat_number: '', block: '', society_id: '', role: 'resident' });
+  const [societies, setSocieties] = useState([]);
+  const [verificationStep, setVerificationStep] = useState(1);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    if (verificationStep === 1) {
+      // Verify society first
+      if (!form.society_id) {
+        setError('Please enter a valid society ID');
+        return;
+      }
+      try {
+        const res = await api.post('/auth/verify-society', { society_id: form.society_id });
+        if (res.data.society) {
+          setForm(prev => ({ ...prev, society_name: res.data.society.name }));
+          setVerificationStep(2);
+        } else {
+          setError('Invalid society ID');
+        }
+      } catch (err) {
+        setError(err.response?.data?.error || 'Society verification failed');
+      }
+      return;
+    }
+    
     try {
       await register(form);
       navigate('/');
@@ -30,41 +53,73 @@ export default function Register() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white">MyGate</h1>
-          <p className="text-primary-200 mt-1">Create Your Account</p>
+          <p className="text-primary-200 mt-1">Society Management Platform</p>
         </div>
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Register</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              {verificationStep === 1 ? 'Verify Society' : `Register for ${form.society_name || 'Society'}`}
+            </h2>
           {error && <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <input value={form.name} onChange={set('name')} className="input-field" placeholder="John Doe" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={set('email')} className="input-field" placeholder="john@example.com" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input type="password" value={form.password} onChange={set('password')} className="input-field" placeholder="Min 6 characters" required minLength={6} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            {verificationStep === 1 ? (
+              // Step 1: Society Verification
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                <input value={form.phone} onChange={set('phone')} className="input-field" placeholder="9876543210" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Society ID</label>
+                <input 
+                  value={form.society_id} 
+                  onChange={set('society_id')} 
+                  className="input-field" 
+                  placeholder="Enter your society ID" 
+                  required 
+                />
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (form.society_id) {
+                      setVerificationStep(2);
+                    } else {
+                      setError('Please enter a valid society ID');
+                    }
+                  }} 
+                  className="btn-primary w-full py-3"
+                >
+                  Verify Society
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Block</label>
-                <input value={form.block} onChange={set('block')} className="input-field" placeholder="A" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Flat Number</label>
-              <input value={form.flat_number} onChange={set('flat_number')} className="input-field" placeholder="101" />
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-              {loading ? 'Creating account...' : 'Create Account'}
-            </button>
+            ) : (
+              // Step 2: Registration Form
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input value={form.name} onChange={set('name')} className="input-field" placeholder="John Doe" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input type="email" value={form.email} onChange={set('email')} className="input-field" placeholder="john@example.com" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input type="password" value={form.password} onChange={set('password')} className="input-field" placeholder="Min 6 characters" required minLength={6} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input value={form.phone} onChange={set('phone')} className="input-field" placeholder="9876543210" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Block</label>
+                    <input value={form.block} onChange={set('block')} className="input-field" placeholder="A" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Flat Number</label>
+                  <input value={form.flat_number} onChange={set('flat_number')} className="input-field" placeholder="101" />
+                </div>
+                <button type="submit" disabled={loading} className="btn-primary w-full py-3">
+                  {loading ? 'Creating account...' : 'Create Account'}
+                </button>
+              </>
+            )}
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account? <Link to="/login" className="text-primary-600 font-medium hover:underline">Sign In</Link>

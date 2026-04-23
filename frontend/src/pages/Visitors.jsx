@@ -10,6 +10,9 @@ export default function Visitors() {
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState('');
   const [form, setForm] = useState({ visitor_name: '', visitor_phone: '', visitor_type: 'guest', vehicle_number: '', purpose: '', expected_date: '' });
+  const [showVerifyForm, setShowVerifyForm] = useState(false);
+  const [gatePassCode, setGatePassCode] = useState('');
+  const [verifiedVisitor, setVerifiedVisitor] = useState(null);
 
   const load = async () => {
     try {
@@ -39,17 +42,69 @@ export default function Visitors() {
     } catch (err) { alert(err.response?.data?.error || 'Failed'); }
   };
 
+  const handleVerifyGatePass = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.get(`/visitors/verify/${gatePassCode}`);
+      setVerifiedVisitor(res.data.visitor);
+      alert('Gate pass verified successfully!');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Invalid gate pass code');
+      setVerifiedVisitor(null);
+    }
+  };
+
   const set = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const formatIndianPhone = (phone) => {
+    // Remove all non-digit characters
+    let cleaned = phone.replace(/\D/g, '');
+    
+    // Add +91 if not present and number starts with valid Indian mobile prefix
+    if (!cleaned.startsWith('91') && cleaned.length > 0) {
+      // Check if it's a valid Indian mobile number (starts with 6,7,8,9)
+      const firstDigit = cleaned[0];
+      if (['6', '7', '8', '9'].includes(firstDigit)) {
+        cleaned = '91' + cleaned;
+      }
+    }
+    
+    // Limit to +91 + 10 digits (total 12 digits with country code)
+    if (cleaned.startsWith('91')) {
+      cleaned = '91' + cleaned.slice(2).slice(0, 10);
+    }
+    
+    // Format as +91 XXXXX-XXXXX
+    if (cleaned.length <= 2) {
+      return cleaned;
+    } else if (cleaned.length <= 7) {
+      return `+${cleaned.slice(0, 2)} ${cleaned.slice(2)}`;
+    } else {
+      return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 7)}-${cleaned.slice(7, 12)}`;
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const formatted = formatIndianPhone(e.target.value);
+    setForm(p => ({ ...p, visitor_phone: formatted }));
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-gray-900">Visitors</h1>
-        {user?.role !== 'security' && (
-          <button onClick={() => setShowForm(!showForm)} className="btn-primary flex items-center gap-2">
-            <Plus className="w-4 h-4" /> Pre-approve Visitor
-          </button>
-        )}
+        <div className="flex gap-2">
+          {user?.role === 'security' && (
+            <button onClick={() => setShowVerifyForm(!showVerifyForm)} className="btn-secondary flex items-center gap-2">
+              <Search className="w-4 h-4" /> Verify Gate Pass
+            </button>
+          )}
+          {user?.role !== 'security' && (
+            <button onClick={() => setShowForm(!showForm)} className="btn-primary flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Pre-approve Visitor
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter */}
@@ -73,7 +128,14 @@ export default function Visitors() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input value={form.visitor_phone} onChange={set('visitor_phone')} className="input-field" />
+              <input 
+                value={form.visitor_phone} 
+                onChange={handlePhoneChange} 
+                className="input-field" 
+                placeholder="+91 98765-43210"
+                maxLength={13}
+              />
+              <p className="text-xs text-gray-500 mt-1">Indian mobile: +91 XXXXX-XXXXX (starts with 6,7,8,9)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
@@ -95,13 +157,73 @@ export default function Visitors() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Expected Date</label>
-              <input type="date" value={form.expected_date} onChange={set('expected_date')} className="input-field" />
+              <input 
+                type="date" 
+                value={form.expected_date} 
+                onChange={set('expected_date')} 
+                min={new Date().toISOString().split('T')[0]}
+                className="input-field" 
+              />
             </div>
             <div className="sm:col-span-2 flex gap-2">
               <button type="submit" className="btn-primary">Create Gate Pass</button>
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">Cancel</button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Gate Pass Verification Form */}
+      {showVerifyForm && (
+        <div className="card">
+          <h3 className="text-lg font-semibold mb-4">Verify Gate Pass</h3>
+          <form onSubmit={handleVerifyGatePass} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gate Pass Code</label>
+              <input 
+                type="text" 
+                value={gatePassCode} 
+                onChange={e => setGatePassCode(e.target.value.toUpperCase())}
+                placeholder="Enter gate pass code (e.g., 53OQPN)"
+                className="input-field uppercase"
+                required 
+              />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary">Verify Gate Pass</button>
+              <button type="button" onClick={() => {
+                setShowVerifyForm(false);
+                setGatePassCode('');
+                setVerifiedVisitor(null);
+              }} className="btn-secondary">Cancel</button>
+            </div>
+          </form>
+          
+          {/* Verified Visitor Details */}
+          {verifiedVisitor && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-semibold text-green-800 mb-2">Verified Visitor Details:</h4>
+              <div className="space-y-1 text-sm">
+                <p><strong>Name:</strong> {verifiedVisitor.visitor_name}</p>
+                <p><strong>Type:</strong> {verifiedVisitor.visitor_type}</p>
+                <p><strong>Phone:</strong> {verifiedVisitor.visitor_phone || 'N/A'}</p>
+                <p><strong>Vehicle:</strong> {verifiedVisitor.vehicle_number || 'N/A'}</p>
+                <p><strong>Resident:</strong> {verifiedVisitor.resident_name} ({verifiedVisitor.block}-{verifiedVisitor.flat_number})</p>
+                <p><strong>Purpose:</strong> {verifiedVisitor.purpose || 'N/A'}</p>
+                <p><strong>Status:</strong> <span className="badge bg-blue-100 text-blue-700">{verifiedVisitor.status}</span></p>
+              </div>
+              {verifiedVisitor.status === 'approved' && (
+                <div className="mt-3">
+                  <button 
+                    onClick={() => handleAction(verifiedVisitor.id, 'checkin')}
+                    className="btn-success text-sm py-1.5 px-3 flex items-center gap-1"
+                  >
+                    <LogIn className="w-4 h-4" /> Check In
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
