@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Shield } from 'lucide-react';
 
+// Demo society for verification
+const DEMO_SOCIETY = { id: 'GREEN-001', name: 'Green Valley Society' };
+
 export default function Register() {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
@@ -22,15 +25,17 @@ export default function Register() {
         return;
       }
       try {
-        const res = await api.post('/auth/verify-society', { society_id: form.society_id });
-        if (res.data.society) {
-          setForm(prev => ({ ...prev, society_name: res.data.society.name }));
+        // Dummy society verification
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (form.society_id === DEMO_SOCIETY.id) {
+          setForm(prev => ({ ...prev, society_name: DEMO_SOCIETY.name }));
           setVerificationStep(2);
         } else {
-          setError('Invalid society ID');
+          setError('Invalid society ID. Use: GREEN-001');
         }
       } catch (err) {
-        setError(err.response?.data?.error || 'Society verification failed');
+        setError('Society verification failed');
       }
       return;
     }
@@ -39,7 +44,7 @@ export default function Register() {
       await register(form);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.message || 'Registration failed');
     }
   };
 
